@@ -116,6 +116,10 @@ Every repository implementation runs the same tests from `domain/repositories/ta
 
 Tests of the whole running service against real infrastructure, if you add them, belong in a top-level `test/` folder as their own Vitest project, since they test no single file.
 
+## Continuous integration
+
+GitHub Actions runs `format:check`, `lint`, `typecheck`, `build` and `test:coverage` on every push to `main` and every pull request, in [`.github/workflows/ci.yml`](.github/workflows/ci.yml). The integration tests run unchanged, because GitHub's Ubuntu runners include Docker.
+
 ## Notes
 
 **TypeScript is pinned to 6.0** because `typescript-eslint` does not support TypeScript 7 yet. Upgrade once it does.
