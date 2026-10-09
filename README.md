@@ -22,16 +22,19 @@ The service listens on port 3000 by default.
 
 ## Scripts
 
-| Script                 | Description                                           |
-| ---------------------- | ----------------------------------------------------- |
-| `npm run build`        | Compile `src` to `dist`                               |
-| `npm run dev`          | Run from source, restart on change, pretty-print logs |
-| `npm run format`       | Format all files with Prettier                        |
-| `npm run format:check` | Check formatting without writing                      |
-| `npm run lint`         | Lint all files                                        |
-| `npm run lint:fix`     | Lint and apply automatic fixes                        |
-| `npm start`            | Run the compiled build                                |
-| `npm run typecheck`    | Type-check without emitting                           |
+| Script                  | Description                                           |
+| ----------------------- | ----------------------------------------------------- |
+| `npm run build`         | Compile `src` to `dist`, excluding tests              |
+| `npm run dev`           | Run from source, restart on change, pretty-print logs |
+| `npm run format`        | Format all files with Prettier                        |
+| `npm run format:check`  | Check formatting without writing                      |
+| `npm run lint`          | Lint all files                                        |
+| `npm run lint:fix`      | Lint and apply automatic fixes                        |
+| `npm start`             | Run the compiled build                                |
+| `npm test`              | Run the tests once                                    |
+| `npm run test:coverage` | Run the tests and enforce the 80% coverage minimum    |
+| `npm run test:watch`    | Run the tests in watch mode                           |
+| `npm run typecheck`     | Type-check without emitting                           |
 
 ## Architecture
 
@@ -79,6 +82,20 @@ The domain and application layers never import Express, a database client or any
 - **Factories are called `make…`** and take a `…Dependencies` object.
 - **Files are named after what they hold,** in kebab case: `create-task.ts` holds the create-task use case, and `task-not-found-error.ts` holds `TaskNotFoundError`. Test blocks are named after the function under test, such as `makeCreateTask`.
 - **Names are singular for a kind of thing and plural for a collection:** `Task`, `TaskRepository` and `TaskNotFoundError`, but the `tasks/` module, the `/tasks` path and `tasksRouter`.
+
+## Testing
+
+Tests use [Vitest](https://vitest.dev) and [supertest](https://github.com/forwardemail/supertest), and live next to the file they test.
+
+| Layer          | What the tests cover                                                                               |
+| -------------- | -------------------------------------------------------------------------------------------------- |
+| Domain         | Business rules, including boundary values                                                          |
+| Application    | Each use case against the in-memory repository                                                     |
+| Infrastructure | Each repository implementation's behaviour                                                         |
+| Presentation   | Each controller with a stubbed use case (validation and error statuses), and the router end to end |
+| App            | Health check, routing, 404, malformed JSON and unexpected errors                                   |
+
+Controller tests mount the controller through `makeApp`, so they run with the same middleware as the real service.
 
 ## Notes
 

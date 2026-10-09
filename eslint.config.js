@@ -7,7 +7,7 @@ import { defineConfig, globalIgnores } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig(
-  globalIgnores(['dist']),
+  globalIgnores(['coverage', 'dist']),
   {
     extends: [
       js.configs.recommended,
