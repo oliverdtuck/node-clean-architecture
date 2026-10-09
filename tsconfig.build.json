@@ -4,5 +4,6 @@
   "compilerOptions": {
     "rootDir": "src"
   },
-  "exclude": ["src/**/*.test.ts"]
+  "include": ["src"],
+  "exclude": ["src/**/*.contract.ts", "src/**/*.test.ts"]
 }

@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      # Localhost only, so the database isn't reachable from other machines
+      - '127.0.0.1:5432:5432'
+    volumes:
+      # Postgres 18 images keep data under /var/lib/postgresql/18/docker
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      # Over TCP, because the temporary server used during first-time setup only listens on a Unix socket
+      test:
+        ['CMD', 'pg_isready', '--host', '127.0.0.1', '--username', 'postgres']
+      # Checks every second while starting, then at the default 30 second interval
+      start_period: 30s
+      start_interval: 1s
+
+volumes:
+  postgres-data:

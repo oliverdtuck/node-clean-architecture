@@ -1,22 +1,45 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ZodError } from 'zod';
 
 import { loadConfig } from './config.ts';
 
+const databaseUrl = 'postgres://postgres:postgres@localhost:5432/postgres';
+
 describe('loadConfig', () => {
+  beforeEach(() => {
+    vi.stubEnv('DATABASE_URL', databaseUrl);
+  });
+
   it('defaults the log level to info and the port to 3000', () => {
     vi.stubEnv('LOG_LEVEL', undefined);
     vi.stubEnv('PORT', undefined);
 
-    expect(loadConfig()).toEqual({ logLevel: 'info', port: 3000 });
+    expect(loadConfig()).toEqual({
+      databaseUrl,
+      logLevel: 'info',
+      port: 3000,
+    });
   });
 
   it('reads the log level and port from the environment', () => {
     vi.stubEnv('LOG_LEVEL', 'debug');
     vi.stubEnv('PORT', '8080');
 
-    expect(loadConfig()).toEqual({ logLevel: 'debug', port: 8080 });
+    expect(loadConfig()).toEqual({
+      databaseUrl,
+      logLevel: 'debug',
+      port: 8080,
+    });
   });
+
+  it.each([undefined, 'not a url', 'mysql://localhost/db'])(
+    'rejects a missing or non-Postgres database URL (%j)',
+    (url) => {
+      vi.stubEnv('DATABASE_URL', url);
+
+      expect(() => loadConfig()).toThrow(ZodError);
+    },
+  );
 
   it('rejects an unknown log level', () => {
     vi.stubEnv('LOG_LEVEL', 'verbose');

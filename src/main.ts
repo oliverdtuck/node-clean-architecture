@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { Pool } from 'pg';
 import { pino } from 'pino';
 
 import { makeApp } from './app.ts';
@@ -7,13 +8,20 @@ import { makeCompleteTask } from './modules/tasks/application/use-cases/complete
 import { makeCreateTask } from './modules/tasks/application/use-cases/create-task.ts';
 import { makeGetTask } from './modules/tasks/application/use-cases/get-task.ts';
 import { makeListTasks } from './modules/tasks/application/use-cases/list-tasks.ts';
-import { makeInMemoryTaskRepository } from './modules/tasks/infrastructure/database/in-memory-task-repository.ts';
+import { makePostgresTaskRepository } from './modules/tasks/infrastructure/database/postgres-task-repository.ts';
 import { makeTasksRouter } from './modules/tasks/presentation/tasks-router.ts';
 
 const config = loadConfig();
 const logger = pino({ level: config.logLevel });
 
-const taskRepository = makeInMemoryTaskRepository();
+const pool = new Pool({ connectionString: config.databaseUrl });
+
+// An idle client can lose its connection; without a listener that error crashes the process
+pool.on('error', (error) => {
+  logger.error({ err: error }, 'Idle database client failed');
+});
+
+const taskRepository = makePostgresTaskRepository({ pool });
 
 const tasksRouter = makeTasksRouter({
   completeTask: makeCompleteTask({ taskRepository }),
@@ -42,6 +50,12 @@ const shutdown = (signal: NodeJS.Signals) => {
       logger.error({ err: error }, 'Failed to shut down cleanly');
       process.exitCode = 1;
     }
+
+    // After in-flight requests finish, so none lose their connection
+    pool.end().catch((poolError: unknown) => {
+      logger.error({ err: poolError }, 'Failed to close the database pool');
+      process.exitCode = 1;
+    });
   });
 };
 
